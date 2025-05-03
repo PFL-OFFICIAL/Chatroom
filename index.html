@@ -8,12 +8,18 @@
 </head>
 <body>
   <h1>Simple Chatroom</h1>
+  
+  <!-- Google Sign-In Button -->
+  <button onclick="googleSignIn()">Sign in with Google</button>
+  <br><br>
+  
+  <!-- Messages Section -->
   <div id="messages"></div>
   <input type="text" id="messageInput" placeholder="Type a message">
   <button onclick="sendMessage()">Send</button>
-
+  
   <script>
-    // Your Firebase config
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCJPYAzpnNbAcRmywJYEHROZS9QFxXsARI",
       authDomain: "chatroom-530ee.firebaseapp.com",
@@ -24,47 +30,65 @@
       appId: "1:438660677710:web:5b1057c2360a5093e4831f",
       measurementId: "G-P1Y0ES3VT3"
     };
-
+    
     // Initialize Firebase
     const app = firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();  // Make sure this is after the app initialization
+    const auth = firebase.auth();  // Initialize Firebase Auth
     const db = firebase.database();
+    
+    // Google Sign-In
+    function googleSignIn() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
+        .then((result) => {
+          const user = result.user;
+          console.log("Signed in as:", user.displayName);
+          alert(`Welcome, ${user.displayName}!`);
 
-    // Sign in anonymously (optional)
-    auth.signInAnonymously()
-      .then(() => {
-        console.log("Signed in anonymously");
-      })
-      .catch((error) => {
-        console.error("Anonymous sign-in failed:", error);
-      });
+          // Optionally: Store user info in the database (for example, display name)
+          db.ref('users/' + user.uid).set({
+            name: user.displayName,
+            email: user.email
+          });
 
-    // Send message
+          // Enable messaging after successful sign-in
+          document.getElementById("messageInput").disabled = false;
+          document.querySelector("button[onclick='sendMessage()']").disabled = false;
+        })
+        .catch((error) => {
+          console.error("Error during Google sign-in:", error);
+          alert("Failed to sign in with Google.");
+        });
+    }
+
+    // Send message function
     function sendMessage() {
       const msg = document.getElementById('messageInput').value;
       if (msg.trim() === "") return; // Don't send empty messages
-
-      // Ensure we have a valid user ID or use 'anonymous' if not signed in
+      
       const userId = auth.currentUser ? auth.currentUser.uid : "anonymous";
+      const userName = auth.currentUser ? auth.currentUser.displayName : "Anonymous";
       const timestamp = new Date().toISOString(); // Timestamp in ISO format
 
-      // Push the message with userId and timestamp
+      // Push the message with user ID, name, and timestamp
       db.ref('messages').push().set({
         text: msg,
-        uid: userId,
+        userId: userId,
+        userName: userName,
         timestamp: timestamp
       });
 
-      document.getElementById('messageInput').value = ''; // Clear the input field
+      // Clear the input field
+      document.getElementById('messageInput').value = '';
     }
 
     // Listen for new messages
     db.ref('messages').on('child_added', function(snapshot) {
       const msg = snapshot.val().text;
-      const userId = snapshot.val().uid;
+      const userName = snapshot.val().userName;
       const timestamp = snapshot.val().timestamp;
       const msgDiv = document.createElement('div');
-      msgDiv.innerHTML = `<strong>User ${userId}</strong>: ${msg} <br><small>${new Date(timestamp).toLocaleString()}</small>`;
+      msgDiv.innerHTML = `<strong>${userName}</strong>: ${msg} <br><small>${new Date(timestamp).toLocaleString()}</small>`;
       document.getElementById('messages').appendChild(msgDiv);
     });
   </script>
