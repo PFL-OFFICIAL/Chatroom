@@ -295,9 +295,12 @@
           const userItem = document.createElement('div');
           userItem.classList.add('user-item');
           userItem.textContent = user.name;
+          
+          // Adding the click event properly to show details
           userItem.onclick = function() {
             showUserDetails(userId, user);
           };
+          
           userListDiv.appendChild(userItem);
         }
       });
