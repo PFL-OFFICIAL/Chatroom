@@ -190,7 +190,7 @@
     
     // Set user role when they sign in
     function setUserRole(user) {
-      const isAdmin = user.email === 'admin@example.com'; // Example condition for admin
+      const isAdmin = user.email === 'printforgelimited@gmail.com'; // Admin check
       db.ref('users/' + user.uid).set({
         name: user.displayName,
         email: user.email,
@@ -255,7 +255,6 @@
     function sendMessage() {
       const msg = document.getElementById('messageInput').value;
       if (msg.trim() === "") return; // Don't send empty messages
-      
       const userId = auth.currentUser ? auth.currentUser.uid : "anonymous";
       const userName = auth.currentUser ? auth.currentUser.displayName : "Anonymous";
       const timestamp = new Date().toISOString(); // Timestamp in ISO format
@@ -287,23 +286,29 @@
     function clearChat() {
       db.ref('messages').remove()
         .then(() => {
-          alert('Chat cleared!');
+          console.log("Chat cleared successfully.");
+          alert("Chat has been cleared.");
         })
         .catch((error) => {
           console.error("Error clearing chat:", error);
+          alert("Failed to clear chat.");
         });
     }
 
     // Delete user function (admin only)
     function deleteUser() {
-      const userIdToDelete = prompt("Enter the user ID to delete:");
-      db.ref('users').child(userIdToDelete).remove() // Remove the user's profile
-        .then(() => {
-          alert("User deleted!");
-        })
-        .catch((error) => {
-          console.error("Error deleting user:", error);
-        });
+      const userToDelete = prompt("Enter the user ID of the account you want to delete.");
+      if (userToDelete) {
+        db.ref('users/' + userToDelete).remove()
+          .then(() => {
+            console.log("User deleted successfully.");
+            alert("User has been deleted.");
+          })
+          .catch((error) => {
+            console.error("Error deleting user:", error);
+            alert("Failed to delete user.");
+          });
+      }
     }
   </script>
 </body>
