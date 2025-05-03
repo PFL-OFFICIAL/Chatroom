@@ -155,6 +155,42 @@
       background-color: #f9f9f9;
       border-radius: 8px;
     }
+
+    body.dark-mode {
+      background-color: #2b2b2b;
+      color: white;
+    }
+
+    body.dark-mode #chat-container {
+      background-color: #333;
+      color: white;
+    }
+
+    body.dark-mode button {
+      background-color: #555;
+    }
+
+    body.dark-mode button:hover {
+      background-color: #666;
+    }
+
+    body.dark-mode .send-button {
+      background-color: #0066cc;
+    }
+
+    body.dark-mode .send-button:disabled {
+      background-color: #444;
+    }
+
+    body.dark-mode .message {
+      background-color: #444;
+      color: white;
+    }
+
+    body.dark-mode .user-item {
+      background-color: #444;
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -256,7 +292,7 @@
 
     function showUserDetails(id, user) {
       const details = document.getElementById('userDetails');
-      details.innerHTML = `
+      details.innerHTML = `  
         <p><strong>Account ID:</strong> ${id}</p>
         <p><strong>Email:</strong> ${user.email}</p>
       `;
