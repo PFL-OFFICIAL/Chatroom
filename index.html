@@ -1,23 +1,141 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chatroom</title>
+  
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <title>Chatroom</title>
+  
+  <style>
+    /* General reset */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    /* Body */
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f5f5f5;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      flex-direction: column;
+    }
+
+    /* Chat container */
+    #chat-container {
+      background-color: white;
+      width: 80%;
+      max-width: 600px;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      height: 80%;
+    }
+
+    /* Header */
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #007bff;
+    }
+
+    /* Sign-in button */
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 0;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    /* Message display */
+    #messages {
+      flex-grow: 1;
+      overflow-y: auto;
+      margin-bottom: 20px;
+      padding-right: 10px;
+    }
+
+    .message {
+      background-color: #f1f1f1;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+      max-width: 80%;
+      word-wrap: break-word;
+      font-size: 14px;
+    }
+
+    .user-name {
+      font-weight: bold;
+      color: #007bff;
+    }
+
+    .message-time {
+      font-size: 0.8em;
+      color: #aaa;
+    }
+
+    /* Input and send button */
+    #messageInput {
+      width: calc(100% - 100px);
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .send-button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+
+    .send-button:hover {
+      background-color: #218838;
+    }
+  </style>
 </head>
 <body>
-  <h1>Simple Chatroom</h1>
-  
-  <!-- Google Sign-In Button -->
-  <button onclick="googleSignIn()">Sign in with Google</button>
-  <br><br>
-  
-  <!-- Messages Section -->
-  <div id="messages"></div>
-  <input type="text" id="messageInput" placeholder="Type a message" disabled>
-  <button onclick="sendMessage()" disabled>Send</button>
-  <button onclick="clearChat()">Clear Chat</button> <!-- Clear Chat Button -->
+  <div id="chat-container">
+    <h1>Chatroom</h1>
+    <!-- Google Sign-In Button -->
+    <button onclick="googleSignIn()">Sign in with Google</button>
+    <br>
+    
+    <!-- Messages Section -->
+    <div id="messages"></div>
+    
+    <!-- Message Input and Send Button -->
+    <input type="text" id="messageInput" placeholder="Type a message" disabled>
+    <button onclick="sendMessage()" class="send-button" disabled>Send</button>
+  </div>
 
   <script>
     // Firebase config
@@ -89,24 +207,10 @@
       const userName = snapshot.val().userName;
       const timestamp = snapshot.val().timestamp;
       const msgDiv = document.createElement('div');
-      msgDiv.innerHTML = `<strong>${userName}</strong>: ${msg} <br><small>${new Date(timestamp).toLocaleString()}</small>`;
+      msgDiv.classList.add('message');
+      msgDiv.innerHTML = `<span class="user-name">${userName}</span>: ${msg} <br><span class="message-time">${new Date(timestamp).toLocaleString()}</span>`;
       document.getElementById('messages').appendChild(msgDiv);
     });
-
-    // Clear chat function
-    function clearChat() {
-      // Clear messages from Firebase
-      db.ref('messages').remove()
-        .then(function() {
-          console.log('All messages removed from Firebase.');
-        })
-        .catch(function(error) {
-          console.error('Error removing messages:', error);
-        });
-
-      // Clear messages from the UI
-      document.getElementById('messages').innerHTML = '';
-    }
   </script>
 </body>
 </html>
