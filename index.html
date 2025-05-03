@@ -2,23 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Chatroom</title>
-  
+
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  
+
   <style>
-    /* General reset */
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
-    
-    /* Body */
+
     body {
       font-family: 'Arial', sans-serif;
       background-color: #f5f5f5;
@@ -27,40 +25,37 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
-      margin: 0;
       flex-direction: column;
+      margin: 0;
     }
 
-    /* Chat container */
     #chat-container {
-      background-color: white;
-      width: 80%;
+      background-color: #fff;
+      width: 90%;
       max-width: 600px;
       padding: 20px;
       border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
       display: flex;
       flex-direction: column;
-      height: 80%;
+      height: 90%;
     }
 
-    /* Header */
     h1 {
       text-align: center;
       margin-bottom: 20px;
       color: #007bff;
     }
 
-    /* Sign-in buttons */
     button {
       background-color: #007bff;
-      color: white;
+      color: #fff;
       border: none;
       padding: 10px 20px;
       border-radius: 5px;
       cursor: pointer;
       font-size: 16px;
-      margin: 10px 0;
+      margin: 5px 0;
       transition: background-color 0.3s ease;
     }
 
@@ -68,11 +63,10 @@
       background-color: #0056b3;
     }
 
-    /* Message display */
     #messages {
       flex-grow: 1;
       overflow-y: auto;
-      margin-bottom: 20px;
+      margin: 20px 0;
       padding-right: 10px;
     }
 
@@ -81,7 +75,6 @@
       border-radius: 10px;
       padding: 10px;
       margin-bottom: 10px;
-      max-width: 80%;
       word-wrap: break-word;
       font-size: 14px;
     }
@@ -93,10 +86,10 @@
 
     .message-time {
       font-size: 0.8em;
-      color: #aaa;
+      color: #999;
+      display: block;
     }
 
-    /* Input and send button */
     #messageInput {
       width: calc(100% - 100px);
       padding: 10px;
@@ -108,7 +101,7 @@
 
     .send-button {
       background-color: #28a745;
-      color: white;
+      color: #fff;
       border: none;
       padding: 10px;
       border-radius: 5px;
@@ -121,7 +114,6 @@
       background-color: #218838;
     }
 
-    /* Admin controls */
     #adminControls {
       display: none;
       margin-top: 20px;
@@ -132,18 +124,12 @@
 
     #adminControls button {
       background-color: #dc3545;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
     }
 
     #adminControls button:hover {
       background-color: #c82333;
     }
 
-    /* User list */
     #userList {
       margin-top: 20px;
       padding: 10px;
@@ -153,18 +139,16 @@
 
     .user-item {
       padding: 10px;
-      margin: 5px;
+      margin: 5px 0;
       background-color: #f1f1f1;
       border-radius: 5px;
       cursor: pointer;
-      transition: background-color 0.3s;
     }
 
     .user-item:hover {
       background-color: #ddd;
     }
 
-    /* User details */
     #userDetails {
       margin-top: 20px;
       padding: 10px;
@@ -176,23 +160,15 @@
 <body>
   <div id="chat-container">
     <h1>Chatroom</h1>
-    
-    <!-- Google Sign-In Button -->
+
     <button onclick="googleSignIn()">Sign in with Google</button>
-    
-    <!-- Anonymous Sign-In Button -->
     <button onclick="anonymousSignIn()">Sign in Anonymously</button>
-    
-    <br>
-    
-    <!-- Messages Section -->
+
     <div id="messages"></div>
-    
-    <!-- Message Input and Send Button -->
+
     <input type="text" id="messageInput" placeholder="Type a message" disabled>
     <button onclick="sendMessage()" class="send-button" disabled>Send</button>
 
-    <!-- Admin Controls (hidden by default) -->
     <div id="adminControls">
       <button onclick="clearChat()">Clear Chat</button>
       <button onclick="deleteUser()">Delete User</button>
@@ -202,7 +178,6 @@
   </div>
 
   <script>
-    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyCJPYAzpnNbAcRmywJYEHROZS9QFxXsARI",
       authDomain: "chatroom-530ee.firebaseapp.com",
@@ -210,168 +185,115 @@
       projectId: "chatroom-530ee",
       storageBucket: "chatroom-530ee.appspot.com",
       messagingSenderId: "438660677710",
-      appId: "1:438660677710:web:5b1057c2360a5093e4831f",
-      measurementId: "G-P1Y0ES3VT3"
+      appId: "1:438660677710:web:5b1057c2360a5093e4831f"
     };
-    
-    // Initialize Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();  // Initialize Firebase Auth
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
     const db = firebase.database();
-    
-    // Set user role when they sign in
+
     function setUserRole(user) {
-      const isAdmin = user.email === 'printforgelimited@gmail.com'; // Admin check
+      const isAdmin = user.email === 'printforgelimited@gmail.com';
       db.ref('users/' + user.uid).set({
         name: user.displayName,
         email: user.email,
         role: isAdmin ? 'admin' : 'user'
       });
     }
-    
-    // Google Sign-In
+
     function googleSignIn() {
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider)
-        .then((result) => {
+        .then(result => {
           const user = result.user;
-          console.log("Signed in as:", user.displayName);
           alert(`Welcome, ${user.displayName}!`);
-
-          // Set user role (admin or regular user)
           setUserRole(user);
-
-          // Enable messaging after successful sign-in
-          document.getElementById("messageInput").disabled = false;
-          document.querySelector("button[onclick='sendMessage()']").disabled = false;
-
-          // Check if user is admin and display admin controls if true
+          enableMessaging();
           checkAdminRole(user);
         })
-        .catch((error) => {
-          console.error("Error during Google sign-in:", error);
-          alert("Failed to sign in with Google.");
-        });
+        .catch(error => alert("Google sign-in failed."));
     }
 
-    // Anonymous Sign-In
     function anonymousSignIn() {
       auth.signInAnonymously()
         .then(() => {
-          console.log("Signed in anonymously.");
-          alert("You are signed in anonymously!");
-
-          // Enable messaging after successful sign-in
-          document.getElementById("messageInput").disabled = false;
-          document.querySelector("button[onclick='sendMessage()']").disabled = false;
+          alert("Signed in anonymously!");
+          enableMessaging();
         })
-        .catch((error) => {
-          console.error("Error during anonymous sign-in:", error);
-          alert("Failed to sign in anonymously.");
-        });
+        .catch(() => alert("Anonymous sign-in failed."));
     }
 
-    // Check if user is admin
+    function enableMessaging() {
+      document.getElementById("messageInput").disabled = false;
+      document.querySelector(".send-button").disabled = false;
+    }
+
     function checkAdminRole(user) {
-      db.ref('users/' + user.uid).once('value').then((snapshot) => {
-        const userData = snapshot.val();
-        if (userData && userData.role === 'admin') {
-          // Show admin controls
+      db.ref('users/' + user.uid).once('value').then(snapshot => {
+        const data = snapshot.val();
+        if (data && data.role === 'admin') {
           document.getElementById('adminControls').style.display = 'block';
           loadUserList();
         }
       });
     }
 
-    // Load user list for admin
     function loadUserList() {
-      db.ref('users').once('value').then((snapshot) => {
+      db.ref('users').once('value').then(snapshot => {
         const users = snapshot.val();
-        const userListDiv = document.getElementById('userList');
-        userListDiv.innerHTML = ''; // Clear existing list
-        
-        for (const userId in users) {
-          const user = users[userId];
-          const userItem = document.createElement('div');
-          userItem.classList.add('user-item');
-          userItem.textContent = user.name;
-          
-          // Adding the click event properly to show details
-          userItem.onclick = function() {
-            showUserDetails(userId, user);
-          };
-          
-          userListDiv.appendChild(userItem);
+        const list = document.getElementById('userList');
+        list.innerHTML = '';
+        for (const id in users) {
+          const u = users[id];
+          const div = document.createElement('div');
+          div.className = 'user-item';
+          div.textContent = u.name;
+          div.onclick = () => showUserDetails(id, u);
+          list.appendChild(div);
         }
       });
     }
 
-    // Display user details when clicked
-    function showUserDetails(userId, user) {
-      const userDetailsDiv = document.getElementById('userDetails');
-      userDetailsDiv.innerHTML = `
-        <p><strong>Account ID:</strong> ${userId}</p>
+    function showUserDetails(id, user) {
+      const details = document.getElementById('userDetails');
+      details.innerHTML = `
+        <p><strong>Account ID:</strong> ${id}</p>
         <p><strong>Email:</strong> ${user.email}</p>
       `;
     }
 
-    // Send message function
     function sendMessage() {
-      const msg = document.getElementById('messageInput').value;
-      if (msg.trim() === "") return; // Don't send empty messages
-      const userId = auth.currentUser ? auth.currentUser.uid : "anonymous";
-      const userName = auth.currentUser ? auth.currentUser.displayName : "Anonymous";
-      const timestamp = new Date().toISOString(); // Timestamp in ISO format
-
-      // Push the message with user ID, name, and timestamp
+      const msg = document.getElementById('messageInput').value.trim();
+      if (!msg) return;
+      const user = auth.currentUser;
+      const name = user.displayName || "Anonymous";
+      const timestamp = new Date().toISOString();
       db.ref('messages').push().set({
         text: msg,
-        userId: userId,
-        userName: userName,
+        userId: user.uid,
+        userName: name,
         timestamp: timestamp
       });
-
-      // Clear the input field
       document.getElementById('messageInput').value = '';
     }
 
-    // Listen for new messages
-    db.ref('messages').on('child_added', function(snapshot) {
-      const msg = snapshot.val().text;
-      const userName = snapshot.val().userName;
-      const timestamp = snapshot.val().timestamp;
-      const msgDiv = document.createElement('div');
-      msgDiv.classList.add('message');
-      msgDiv.innerHTML = `<span class="user-name">${userName}</span>: ${msg} <br><span class="message-time">${new Date(timestamp).toLocaleString()}</span>`;
-      document.getElementById('messages').appendChild(msgDiv);
+    db.ref('messages').on('child_added', snapshot => {
+      const m = snapshot.val();
+      const div = document.createElement('div');
+      div.className = 'message';
+      div.innerHTML = `<span class="user-name">${m.userName}</span>: ${m.text}
+      <span class="message-time">${new Date(m.timestamp).toLocaleString()}</span>`;
+      document.getElementById('messages').appendChild(div);
     });
 
-    // Clear chat function (admin only)
     function clearChat() {
-      db.ref('messages').remove()
-        .then(() => {
-          console.log("Chat cleared successfully.");
-          alert("Chat has been cleared.");
-        })
-        .catch((error) => {
-          console.error("Error clearing chat:", error);
-          alert("Failed to clear chat.");
-        });
+      db.ref('messages').remove().then(() => alert("Chat cleared."));
     }
 
-    // Delete user function (admin only)
     function deleteUser() {
-      const userToDelete = prompt("Enter the user ID of the account you want to delete.");
-      if (userToDelete) {
-        db.ref('users/' + userToDelete).remove()
-          .then(() => {
-            console.log("User deleted successfully.");
-            alert("User has been deleted.");
-          })
-          .catch((error) => {
-            console.error("Error deleting user:", error);
-            alert("Failed to delete user.");
-          });
+      const id = prompt("Enter User ID to delete:");
+      if (id) {
+        db.ref('users/' + id).remove().then(() => alert("User deleted."));
       }
     }
   </script>
