@@ -120,6 +120,28 @@
     .send-button:hover {
       background-color: #218838;
     }
+
+    /* Admin controls */
+    #adminControls {
+      display: none;
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #f0f0f0;
+      border-radius: 8px;
+    }
+
+    #adminControls button {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #adminControls button:hover {
+      background-color: #c82333;
+    }
   </style>
 </head>
 <body>
@@ -140,6 +162,12 @@
     <!-- Message Input and Send Button -->
     <input type="text" id="messageInput" placeholder="Type a message" disabled>
     <button onclick="sendMessage()" class="send-button" disabled>Send</button>
+
+    <!-- Admin Controls (hidden by default) -->
+    <div id="adminControls">
+      <button onclick="clearChat()">Clear Chat</button>
+      <button onclick="deleteUser()">Delete User</button>
+    </div>
   </div>
 
   <script>
@@ -160,6 +188,16 @@
     const auth = firebase.auth();  // Initialize Firebase Auth
     const db = firebase.database();
     
+    // Set user role when they sign in
+    function setUserRole(user) {
+      const isAdmin = user.email === 'admin@example.com'; // Example condition for admin
+      db.ref('users/' + user.uid).set({
+        name: user.displayName,
+        email: user.email,
+        role: isAdmin ? 'admin' : 'user'
+      });
+    }
+    
     // Google Sign-In
     function googleSignIn() {
       const provider = new firebase.auth.GoogleAuthProvider();
@@ -169,15 +207,15 @@
           console.log("Signed in as:", user.displayName);
           alert(`Welcome, ${user.displayName}!`);
 
-          // Optionally: Store user info in the database (for example, display name)
-          db.ref('users/' + user.uid).set({
-            name: user.displayName,
-            email: user.email
-          });
+          // Set user role (admin or regular user)
+          setUserRole(user);
 
           // Enable messaging after successful sign-in
           document.getElementById("messageInput").disabled = false;
           document.querySelector("button[onclick='sendMessage()']").disabled = false;
+
+          // Check if user is admin and display admin controls if true
+          checkAdminRole(user);
         })
         .catch((error) => {
           console.error("Error during Google sign-in:", error);
@@ -200,6 +238,17 @@
           console.error("Error during anonymous sign-in:", error);
           alert("Failed to sign in anonymously.");
         });
+    }
+
+    // Check if user is admin
+    function checkAdminRole(user) {
+      db.ref('users/' + user.uid).once('value').then((snapshot) => {
+        const userData = snapshot.val();
+        if (userData && userData.role === 'admin') {
+          // Show admin controls
+          document.getElementById('adminControls').style.display = 'block';
+        }
+      });
     }
 
     // Send message function
@@ -233,6 +282,29 @@
       msgDiv.innerHTML = `<span class="user-name">${userName}</span>: ${msg} <br><span class="message-time">${new Date(timestamp).toLocaleString()}</span>`;
       document.getElementById('messages').appendChild(msgDiv);
     });
+
+    // Clear chat function (admin only)
+    function clearChat() {
+      db.ref('messages').remove()
+        .then(() => {
+          alert('Chat cleared!');
+        })
+        .catch((error) => {
+          console.error("Error clearing chat:", error);
+        });
+    }
+
+    // Delete user function (admin only)
+    function deleteUser() {
+      const userIdToDelete = prompt("Enter the user ID to delete:");
+      db.ref('users').child(userIdToDelete).remove() // Remove the user's profile
+        .then(() => {
+          alert("User deleted!");
+        })
+        .catch((error) => {
+          console.error("Error deleting user:", error);
+        });
+    }
   </script>
 </body>
 </html>
