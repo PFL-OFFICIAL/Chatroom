@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chatroom</title>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js"></script>
+</head>
+<body>
+  <h1>Simple Chatroom</h1>
+  <div id="messages"></div>
+  <input type="text" id="messageInput" placeholder="Type a message">
+  <button onclick="sendMessage()">Send</button>
+
+  <script>
+    // Your Firebase config
+    const firebaseConfig = {
+      aapiKey: "AIzaSyCJPYAzpnNbAcRmywJYEHROZS9QFxXsARI",
+  authDomain: "chatroom-530ee.firebaseapp.com",
+  databaseURL: "https://chatroom-530ee-default-rtdb.firebaseio.com",
+  projectId: "chatroom-530ee",
+  storageBucket: "chatroom-530ee.firebasestorage.app",
+  messagingSenderId: "438660677710",
+  appId: "1:438660677710:web:5b1057c2360a5093e4831f",
+  measurementId: "G-P1Y0ES3VT3"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Send message
+    function sendMessage() {
+      const msg = document.getElementById('messageInput').value;
+      db.ref('messages').push().set({ text: msg });
+      document.getElementById('messageInput').value = '';
+    }
+
+    // Listen for new messages
+    db.ref('messages').on('child_added', function(snapshot) {
+      const msg = snapshot.val().text;
+      const msgDiv = document.createElement('div');
+      msgDiv.innerText = msg;
+      document.getElementById('messages').appendChild(msgDiv);
+    });
+  </script>
+</body>
+</html>
