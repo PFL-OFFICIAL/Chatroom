@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <title>Chatroom</title>
-  <!-- Use Firebase v9 compat SDK for older syntax -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <title>Chatroom</title>
 </head>
 <body>
   <h1>Simple Chatroom</h1>
@@ -27,11 +26,11 @@
     };
 
     // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();  // Make sure this is after the app initialization
     const db = firebase.database();
-    const auth = firebase.auth();
 
-    // Sign in anonymously
+    // Sign in anonymously (optional)
     auth.signInAnonymously()
       .then(() => {
         console.log("Signed in anonymously");
@@ -40,22 +39,23 @@
         console.error("Anonymous sign-in failed:", error);
       });
 
-    // Send message with user ID and timestamp
+    // Send message
     function sendMessage() {
       const msg = document.getElementById('messageInput').value;
       if (msg.trim() === "") return; // Don't send empty messages
 
-      const userId = auth.currentUser.uid;  // Get the user's UID
-      const timestamp = new Date().toISOString();  // Timestamp in ISO format
+      // Ensure we have a valid user ID or use 'anonymous' if not signed in
+      const userId = auth.currentUser ? auth.currentUser.uid : "anonymous";
+      const timestamp = new Date().toISOString(); // Timestamp in ISO format
 
-      // Push the message with UID and timestamp
+      // Push the message with userId and timestamp
       db.ref('messages').push().set({
         text: msg,
         uid: userId,
         timestamp: timestamp
       });
 
-      document.getElementById('messageInput').value = '';
+      document.getElementById('messageInput').value = ''; // Clear the input field
     }
 
     // Listen for new messages
