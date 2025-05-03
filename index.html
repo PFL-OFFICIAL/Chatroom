@@ -15,9 +15,10 @@
   
   <!-- Messages Section -->
   <div id="messages"></div>
-  <input type="text" id="messageInput" placeholder="Type a message">
-  <button onclick="sendMessage()">Send</button>
-  
+  <input type="text" id="messageInput" placeholder="Type a message" disabled>
+  <button onclick="sendMessage()" disabled>Send</button>
+  <button onclick="clearChat()">Clear Chat</button> <!-- Clear Chat Button -->
+
   <script>
     // Firebase config
     const firebaseConfig = {
@@ -91,6 +92,21 @@
       msgDiv.innerHTML = `<strong>${userName}</strong>: ${msg} <br><small>${new Date(timestamp).toLocaleString()}</small>`;
       document.getElementById('messages').appendChild(msgDiv);
     });
+
+    // Clear chat function
+    function clearChat() {
+      // Clear messages from Firebase
+      db.ref('messages').remove()
+        .then(function() {
+          console.log('All messages removed from Firebase.');
+        })
+        .catch(function(error) {
+          console.error('Error removing messages:', error);
+        });
+
+      // Clear messages from the UI
+      document.getElementById('messages').innerHTML = '';
+    }
   </script>
 </body>
 </html>
