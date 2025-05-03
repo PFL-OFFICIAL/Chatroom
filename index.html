@@ -11,185 +11,78 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
   <style>
-    * {
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #181818;
+      color: #fff;
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
     }
-
-    body {
-      font-family: 'Arial', sans-serif;
-      background-color: #f5f5f5;
-      color: #333;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      flex-direction: column;
-      margin: 0;
-    }
-
     #chat-container {
-      background-color: #fff;
-      width: 90%;
-      max-width: 600px;
+      width: 80%;
+      margin: auto;
       padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      display: flex;
-      flex-direction: column;
-      height: 90%;
+      background-color: #333;
+      border-radius: 10px;
     }
-
     h1 {
       text-align: center;
-      margin-bottom: 20px;
-      color: #007bff;
     }
-
-    button {
-      background-color: #007bff;
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-      margin: 5px 0;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    #messages {
-      flex-grow: 1;
-      overflow-y: auto;
-      margin: 20px 0;
-      padding-right: 10px;
-    }
-
     .message {
-      background-color: #f1f1f1;
-      border-radius: 10px;
+      margin: 10px 0;
       padding: 10px;
-      margin-bottom: 10px;
-      word-wrap: break-word;
-      font-size: 14px;
-    }
-
-    .user-name {
-      font-weight: bold;
-      color: #007bff;
-    }
-
-    .message-time {
-      font-size: 0.8em;
-      color: #999;
-      display: block;
-    }
-
-    #messageInput {
-      width: calc(100% - 100px);
-      padding: 10px;
+      background-color: #444;
       border-radius: 5px;
-      border: 1px solid #ccc;
-      margin-bottom: 10px;
-      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-
-    .send-button {
-      background-color: #28a745;
-      color: #fff;
-      border: none;
+    .message .user-name {
+      font-weight: bold;
+    }
+    .message .message-time {
+      font-size: 0.8em;
+      color: #bbb;
+    }
+    input[type="text"] {
+      width: 80%;
       padding: 10px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 5px;
+      background-color: #555;
+      color: #fff;
+    }
+    button {
+      background-color: #007BFF;
+      color: white;
+      padding: 10px;
+      border: none;
       border-radius: 5px;
       cursor: pointer;
-      font-size: 16px;
-      transition: background-color 0.3s ease;
     }
-
-    .send-button:hover {
-      background-color: #218838;
+    button:disabled {
+      background-color: #555;
     }
-
+    .send-button {
+      margin-left: 10px;
+    }
     #adminControls {
       display: none;
       margin-top: 20px;
-      padding: 10px;
-      background-color: #f0f0f0;
-      border-radius: 8px;
     }
-
-    #adminControls button {
-      background-color: #dc3545;
-    }
-
-    #adminControls button:hover {
-      background-color: #c82333;
-    }
-
-    #userList {
-      margin-top: 20px;
-      padding: 10px;
-      background-color: #e9ecef;
-      border-radius: 8px;
-    }
-
     .user-item {
       padding: 10px;
+      background-color: #555;
       margin: 5px 0;
-      background-color: #f1f1f1;
       border-radius: 5px;
       cursor: pointer;
     }
-
     .user-item:hover {
-      background-color: #ddd;
-    }
-
-    #userDetails {
-      margin-top: 20px;
-      padding: 10px;
-      background-color: #f9f9f9;
-      border-radius: 8px;
-    }
-
-    body.dark-mode {
-      background-color: #2b2b2b;
-      color: white;
-    }
-
-    body.dark-mode #chat-container {
-      background-color: #333;
-      color: white;
-    }
-
-    body.dark-mode button {
-      background-color: #555;
-    }
-
-    body.dark-mode button:hover {
       background-color: #666;
     }
-
-    body.dark-mode .send-button {
-      background-color: #0066cc;
-    }
-
-    body.dark-mode .send-button:disabled {
-      background-color: #444;
-    }
-
-    body.dark-mode .message {
-      background-color: #444;
-      color: white;
-    }
-
-    body.dark-mode .user-item {
-      background-color: #444;
-      color: white;
+    #userDetails {
+      margin-top: 20px;
     }
   </style>
 </head>
@@ -295,6 +188,7 @@
       details.innerHTML = `  
         <p><strong>Account ID:</strong> ${id}</p>
         <p><strong>Email:</strong> ${user.email}</p>
+        <button onclick="changeUsername('${id}')">Change Username</button>
       `;
     }
 
@@ -317,10 +211,30 @@
       const m = snapshot.val();
       const div = document.createElement('div');
       div.className = 'message';
-      div.innerHTML = `<span class="user-name">${m.userName}</span>: ${m.text}
-      <span class="message-time">${new Date(m.timestamp).toLocaleString()}</span>`;
+      div.innerHTML = `
+        <span class="user-name">${m.userName}</span>: ${m.text}
+        <span class="message-time">${new Date(m.timestamp).toLocaleString()}</span>
+        <button onclick="deleteMessage('${snapshot.key}')">Delete</button>
+      `;
       document.getElementById('messages').appendChild(div);
     });
+
+    function deleteMessage(messageId) {
+      db.ref('messages/' + messageId).remove().then(() => {
+        alert("Message deleted.");
+      });
+    }
+
+    function changeUsername(userId) {
+      const newName = prompt("Enter new username:");
+      if (newName) {
+        db.ref('users/' + userId).update({
+          name: newName
+        }).then(() => {
+          alert("Username changed.");
+        });
+      }
+    }
 
     function clearChat() {
       db.ref('messages').remove().then(() => alert("Chat cleared."));
