@@ -40,19 +40,31 @@
         console.error("Anonymous sign-in failed:", error);
       });
 
-    // Send message
+    // Send message with user ID and timestamp
     function sendMessage() {
       const msg = document.getElementById('messageInput').value;
-      if (msg.trim() === "") return;
-      db.ref('messages').push().set({ text: msg });
+      if (msg.trim() === "") return; // Don't send empty messages
+
+      const userId = auth.currentUser.uid;  // Get the user's UID
+      const timestamp = new Date().toISOString();  // Timestamp in ISO format
+
+      // Push the message with UID and timestamp
+      db.ref('messages').push().set({
+        text: msg,
+        uid: userId,
+        timestamp: timestamp
+      });
+
       document.getElementById('messageInput').value = '';
     }
 
     // Listen for new messages
     db.ref('messages').on('child_added', function(snapshot) {
       const msg = snapshot.val().text;
+      const userId = snapshot.val().uid;
+      const timestamp = snapshot.val().timestamp;
       const msgDiv = document.createElement('div');
-      msgDiv.innerText = msg;
+      msgDiv.innerHTML = `<strong>User ${userId}</strong>: ${msg} <br><small>${new Date(timestamp).toLocaleString()}</small>`;
       document.getElementById('messages').appendChild(msgDiv);
     });
   </script>
