@@ -51,7 +51,7 @@
       color: #007bff;
     }
 
-    /* Sign-in button */
+    /* Sign-in buttons */
     button {
       background-color: #007bff;
       color: white;
@@ -125,8 +125,13 @@
 <body>
   <div id="chat-container">
     <h1>Chatroom</h1>
+    
     <!-- Google Sign-In Button -->
     <button onclick="googleSignIn()">Sign in with Google</button>
+    
+    <!-- Anonymous Sign-In Button -->
+    <button onclick="anonymousSignIn()">Sign in Anonymously</button>
+    
     <br>
     
     <!-- Messages Section -->
@@ -177,6 +182,23 @@
         .catch((error) => {
           console.error("Error during Google sign-in:", error);
           alert("Failed to sign in with Google.");
+        });
+    }
+
+    // Anonymous Sign-In
+    function anonymousSignIn() {
+      auth.signInAnonymously()
+        .then(() => {
+          console.log("Signed in anonymously.");
+          alert("You are signed in anonymously!");
+
+          // Enable messaging after successful sign-in
+          document.getElementById("messageInput").disabled = false;
+          document.querySelector("button[onclick='sendMessage()']").disabled = false;
+        })
+        .catch((error) => {
+          console.error("Error during anonymous sign-in:", error);
+          alert("Failed to sign in anonymously.");
         });
     }
 
