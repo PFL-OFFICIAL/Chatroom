@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <title>Chatroom</title>
-  <!-- Use Firebase v9 compat SDK for older syntax -->
+  <!-- Firebase v9 compat SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 </head>
 <body>
   <h1>Simple Chatroom</h1>
@@ -29,11 +29,21 @@
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const auth = firebase.auth();
+
+    // Sign in anonymously
+    auth.signInAnonymously()
+      .then(() => {
+        console.log("Signed in anonymously");
+      })
+      .catch((error) => {
+        console.error("Anonymous sign-in failed:", error);
+      });
 
     // Send message
     function sendMessage() {
       const msg = document.getElementById('messageInput').value;
-      if (msg.trim() === "") return; // Don't send empty messages
+      if (msg.trim() === "") return;
       db.ref('messages').push().set({ text: msg });
       document.getElementById('messageInput').value = '';
     }
