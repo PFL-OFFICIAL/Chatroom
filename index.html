@@ -141,6 +141,8 @@
     adminControls.innerHTML = `
       <button onclick="clearChat()">Clear Chat</button>
       <button onclick="deleteUserMessages()">Delete User Messages</button>
+      <button onclick="showUserList()">View Online Users</button>
+      <button onclick="banUser()">Ban User</button>
     `;
     document.getElementById('chat-container').appendChild(adminControls);
   }
@@ -158,19 +160,47 @@
     });
   }
 
+  function showUserList() {
+    db.ref('presence').once('value').then(snapshot => {
+      const users = snapshot.val();
+      let message = 'Online Users:\n';
+      for (const uid in users) {
+        message += `• ${uid}\n`;
+      }
+      alert(message);
+    });
+  }
+
+  function banUser() {
+    const userId = prompt("Enter user ID to ban:");
+    if (userId) {
+      db.ref('bannedUsers/' + userId).set(true);
+      alert("User banned.");
+    }
+  }
+
   function sendMessage() {
     const msg = document.getElementById('messageInput').value.trim();
     if (!msg) return;
-    const name = currentUser.displayName || "Anonymous";
-    const timestamp = new Date().toISOString();
-    db.ref('messages').push().set({
-      text: msg,
-      userId: currentUser.uid,
-      userName: name,
-      timestamp: timestamp
+
+    db.ref('bannedUsers/' + currentUser.uid).once('value').then(snapshot => {
+      if (snapshot.exists()) {
+        alert("You are banned from sending messages.");
+        return;
+      }
+
+      const name = currentUser.displayName || "Anonymous";
+      const timestamp = new Date().toISOString();
+      db.ref('messages').push().set({
+        text: msg,
+        userId: currentUser.uid,
+        userName: name,
+        timestamp: timestamp
+      });
+
+      db.ref('typing/' + currentUser.uid).remove();
+      document.getElementById('messageInput').value = '';
     });
-    db.ref('typing/' + currentUser.uid).remove();
-    document.getElementById('messageInput').value = '';
   }
 
   db.ref('messages').on('child_added', snapshot => {
