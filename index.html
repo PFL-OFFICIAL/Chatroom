@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Chatroom</title>
 
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1"></script>
 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -49,7 +50,6 @@
       overflow-y: auto;
       margin: 20px 0;
       padding-right: 10px;
-      display: none;
     }
     .message {
       background-color: #f1f1f1;
@@ -70,23 +70,17 @@
       cursor: pointer;
       font-size: 16px;
     }
-    #typingIndicator, #onlineCount { font-size: 0.9em; color: #666; margin-top: 5px; }
+    #typingIndicator { font-size: 0.9em; color: #666; margin-top: 5px; }
     #emojiPicker { margin-top: 10px; }
+    #onlineCount { margin-top: 10px; font-size: 0.9em; color: #555; }
   </style>
 </head>
 <body>
-
 <div id="chat-container">
   <h1>Chatroom</h1>
 
   <button onclick="googleSignIn()">Sign in with Google</button>
   <button onclick="anonymousSignIn()">Sign in Anonymously</button>
-
-  <div>
-    <button onclick="createRoom()">Create Private Room</button>
-    <button onclick="joinRoom()">Join Room by Code</button>
-    <div id="currentRoom" style="margin:10px 0; font-size:0.9em;"></div>
-  </div>
 
   <div id="messages"></div>
 
@@ -113,78 +107,72 @@
   const auth = firebase.auth();
   const db = firebase.database();
   let currentUser;
-  let currentRoom = null;
 
   function googleSignIn() {
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider).then(result => {
       currentUser = result.user;
-      onUserSignedIn();
+      enableMessaging();
+      db.ref('presence/' + currentUser.uid).set(true);
+      db.ref('presence/' + currentUser.uid).onDisconnect().remove();
     });
   }
 
   function anonymousSignIn() {
     auth.signInAnonymously().then(result => {
       currentUser = result.user;
-      onUserSignedIn();
+      enableMessaging();
+      db.ref('presence/' + currentUser.uid).set(true);
+      db.ref('presence/' + currentUser.uid).onDisconnect().remove();
     });
   }
 
-  function onUserSignedIn() {
+  function enableMessaging() {
     document.getElementById("messageInput").disabled = false;
     document.querySelector(".send-button").disabled = false;
-    document.getElementById("messages").style.display = "block";
-    if (currentRoom) setupRoomListeners();
-  }
-
-  function createRoom() {
-    const code = Math.random().toString(36).substr(2, 6).toUpperCase();
-    currentRoom = code;
-    document.getElementById('currentRoom').textContent = "Room Code: " + currentRoom;
-    alert("Room created. Share this code: " + currentRoom);
-    if (currentUser) setupRoomListeners();
-  }
-
-  function joinRoom() {
-    const code = prompt("Enter room code:");
-    if (code) {
-      currentRoom = code.toUpperCase();
-      document.getElementById('currentRoom').textContent = "Room Code: " + currentRoom;
-      if (currentUser) setupRoomListeners();
-    }
-  }
-
-  function setupRoomListeners() {
-    document.getElementById('messages').innerHTML = '';
-    db.ref('rooms/' + currentRoom + '/messages').off();
-
-    db.ref('rooms/' + currentRoom + '/messages').on('child_added', snapshot => {
-      const m = snapshot.val();
-      const div = document.createElement('div');
-      div.className = 'message';
-      div.innerHTML = `<span class="user-name">${m.userName}</span>: ${m.text}
-        <span class="message-time">${timeAgo(new Date(m.timestamp))}</span>`;
-      document.getElementById('messages').appendChild(div);
-      document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
-    });
   }
 
   function sendMessage() {
     const msg = document.getElementById('messageInput').value.trim();
-    if (!msg || !currentRoom) return;
+    if (!msg) return;
     const name = currentUser.displayName || "Anonymous";
     const timestamp = new Date().toISOString();
-    db.ref('rooms/' + currentRoom + '/messages').push().set({
+    db.ref('messages').push().set({
       text: msg,
+      userId: currentUser.uid,
       userName: name,
       timestamp: timestamp
     });
+    db.ref('typing/' + currentUser.uid).remove();
     document.getElementById('messageInput').value = '';
   }
 
+  db.ref('messages').on('child_added', snapshot => {
+    const m = snapshot.val();
+    const div = document.createElement('div');
+    div.className = 'message';
+    div.innerHTML = `<span class="user-name">${m.userName}</span>: ${m.text}
+      <span class="message-time">${timeAgo(new Date(m.timestamp))}</span>`;
+    document.getElementById('messages').appendChild(div);
+    document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+  });
+
   function updateTyping() {
-    // Optional: Add typing indicators for private rooms if you like
+    if (!currentUser) return;
+    db.ref('typing/' + currentUser.uid).set(currentUser.displayName || 'Anonymous');
+    setTimeout(() => db.ref('typing/' + currentUser.uid).remove(), 3000);
   }
+
+  db.ref('typing').on('value', snapshot => {
+    const data = snapshot.val();
+    const text = data ? Object.values(data).join(', ') + ' typing...' : '';
+    document.getElementById('typingIndicator').textContent = text;
+  });
+
+  db.ref('presence').on('value', snapshot => {
+    const count = snapshot.numChildren();
+    document.getElementById('onlineCount').textContent = `Online: ${count}`;
+  });
 
   function timeAgo(date) {
     const seconds = Math.floor((new Date() - date) / 1000);
@@ -197,6 +185,7 @@
     return days + 'd ago';
   }
 
+  // Emoji picker
   const picker = document.createElement('emoji-picker');
   picker.addEventListener('emoji-click', event => {
     const input = document.getElementById('messageInput');
