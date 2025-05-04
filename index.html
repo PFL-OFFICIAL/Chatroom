@@ -11,7 +11,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
   <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1"></script>
 
-
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -51,6 +50,7 @@
       overflow-y: auto;
       margin: 20px 0;
       padding-right: 10px;
+      display: none; /* hidden until logged in */
     }
     .message {
       background-color: #f1f1f1;
@@ -94,19 +94,6 @@
 </div>
 
 <script>
-  function enableMessaging() {
-  if (!currentUser) {
-    alert('You must be signed in to chat!');
-    return;
-  }
-
-  document.getElementById("messageInput").disabled = false;
-  document.querySelector(".send-button").disabled = false;
-
-  // Show messages only after login
-  document.getElementById('messages').style.display = 'block';
-}
-
   const firebaseConfig = {
     apiKey: "AIzaSyCJPYAzpnNbAcRmywJYEHROZS9QFxXsARI",
     authDomain: "chatroom-530ee.firebaseapp.com",
@@ -144,7 +131,8 @@
   function enableMessaging() {
     document.getElementById("messageInput").disabled = false;
     document.querySelector(".send-button").disabled = false;
-    
+    document.getElementById('messages').style.display = 'block';
+
     if (currentUser.email === "printforgelimited@gmail.com") {
       showAdminControls();
     }
