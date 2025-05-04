@@ -130,6 +130,32 @@
   function enableMessaging() {
     document.getElementById("messageInput").disabled = false;
     document.querySelector(".send-button").disabled = false;
+    
+    if (currentUser.email === "printforgelimited@gmail.com") {
+      showAdminControls();
+    }
+  }
+
+  function showAdminControls() {
+    const adminControls = document.createElement('div');
+    adminControls.innerHTML = `
+      <button onclick="clearChat()">Clear Chat</button>
+      <button onclick="deleteUserMessages()">Delete User Messages</button>
+    `;
+    document.getElementById('chat-container').appendChild(adminControls);
+  }
+
+  function clearChat() {
+    db.ref('messages').remove();
+  }
+
+  function deleteUserMessages() {
+    const userId = prompt("Enter user ID to delete messages:");
+    db.ref('messages').orderByChild('userId').equalTo(userId).once('value').then(snapshot => {
+      snapshot.forEach(childSnapshot => {
+        childSnapshot.ref.remove();
+      });
+    });
   }
 
   function sendMessage() {
