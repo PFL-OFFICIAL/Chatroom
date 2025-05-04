@@ -93,6 +93,19 @@
 </div>
 
 <script>
+  function enableMessaging() {
+  if (!currentUser) {
+    alert('You must be signed in to chat!');
+    return;
+  }
+
+  document.getElementById("messageInput").disabled = false;
+  document.querySelector(".send-button").disabled = false;
+
+  // Show messages only after login
+  document.getElementById('messages').style.display = 'block';
+}
+
   const firebaseConfig = {
     apiKey: "AIzaSyCJPYAzpnNbAcRmywJYEHROZS9QFxXsARI",
     authDomain: "chatroom-530ee.firebaseapp.com",
