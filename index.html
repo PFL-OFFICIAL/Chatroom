@@ -50,7 +50,7 @@
       overflow-y: auto;
       margin: 20px 0;
       padding-right: 10px;
-      display: none; /* hidden until logged in */
+      display: none;
     }
     .message {
       background-color: #f1f1f1;
@@ -113,25 +113,23 @@
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider).then(result => {
       currentUser = result.user;
-      enableMessaging();
-      db.ref('presence/' + currentUser.uid).set(true);
-      db.ref('presence/' + currentUser.uid).onDisconnect().remove();
+      onUserSignedIn();
     });
   }
 
   function anonymousSignIn() {
     auth.signInAnonymously().then(result => {
       currentUser = result.user;
-      enableMessaging();
-      db.ref('presence/' + currentUser.uid).set(true);
-      db.ref('presence/' + currentUser.uid).onDisconnect().remove();
+      onUserSignedIn();
     });
   }
 
-  function enableMessaging() {
+  function onUserSignedIn() {
     document.getElementById("messageInput").disabled = false;
     document.querySelector(".send-button").disabled = false;
-    document.getElementById('messages').style.display = 'block';
+    document.getElementById("messages").style.display = "block";
+    db.ref('presence/' + currentUser.uid).set(true);
+    db.ref('presence/' + currentUser.uid).onDisconnect().remove();
 
     if (currentUser.email === "printforgelimited@gmail.com") {
       showAdminControls();
@@ -213,7 +211,6 @@
     return days + 'd ago';
   }
 
-  // Emoji picker
   const picker = document.createElement('emoji-picker');
   picker.addEventListener('emoji-click', event => {
     const input = document.getElementById('messageInput');
