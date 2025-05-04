@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Chatroom</title>
 
-  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
@@ -33,7 +32,6 @@
       display: flex;
       flex-direction: column;
       height: 90%;
-      overflow-y: auto;
     }
     h1 { text-align: center; margin-bottom: 20px; color: #007bff; }
     button {
@@ -61,11 +59,7 @@
       word-wrap: break-word;
     }
     .user-name { font-weight: bold; }
-    .message-time {
-      font-size: 0.8em;
-      color: #777;
-      display: block;
-    }
+    .message-time { font-size: 0.8em; color: #777; display: block; }
     #messageInput { width: calc(100% - 100px); padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
     .send-button {
       background-color: #28a745;
@@ -76,23 +70,23 @@
       cursor: pointer;
       font-size: 16px;
     }
-    #typingIndicator { font-size: 0.9em; color: #666; margin-top: 5px; }
+    #typingIndicator, #onlineCount { font-size: 0.9em; color: #666; margin-top: 5px; }
     #emojiPicker { margin-top: 10px; }
-    #onlineCount { margin-top: 10px; font-size: 0.9em; color: #555; }
-    #roomList { margin-top: 10px; }
-    ul { padding-left: 20px; }
   </style>
 </head>
 <body>
+
 <div id="chat-container">
   <h1>Chatroom</h1>
 
   <button onclick="googleSignIn()">Sign in with Google</button>
   <button onclick="anonymousSignIn()">Sign in Anonymously</button>
 
-  <input type="text" id="roomCodeInput" placeholder="Enter room code">
-  <button onclick="joinRoom()">Join Room</button>
-  <button onclick="createRoom()">Create New Room</button>
+  <div>
+    <button onclick="createRoom()">Create Private Room</button>
+    <button onclick="joinRoom()">Join Room by Code</button>
+    <div id="currentRoom" style="margin:10px 0; font-size:0.9em;"></div>
+  </div>
 
   <div id="messages"></div>
 
@@ -102,9 +96,6 @@
   <div id="emojiPicker"></div>
   <div id="typingIndicator"></div>
   <div id="onlineCount"></div>
-
-  <button id="viewRoomsBtn" style="display:none;" onclick="viewAllRooms()">Admin: View All Rooms</button>
-  <div id="roomList"></div>
 </div>
 
 <script>
@@ -143,42 +134,31 @@
     document.getElementById("messageInput").disabled = false;
     document.querySelector(".send-button").disabled = false;
     document.getElementById("messages").style.display = "block";
-
-    if (currentUser.email === "printforgelimited@gmail.com") {
-      document.getElementById("viewRoomsBtn").style.display = "block";
-    }
-
     if (currentRoom) setupRoomListeners();
   }
 
   function createRoom() {
-    const roomCode = prompt("Enter a room code:");
-    if (roomCode) {
-      db.ref('rooms/' + roomCode).set({ createdBy: currentUser ? currentUser.uid : "anonymous" });
-      alert("Room created. Share this code: " + roomCode);
-      currentRoom = roomCode;
-      setupRoomListeners();
-    }
+    const code = Math.random().toString(36).substr(2, 6).toUpperCase();
+    currentRoom = code;
+    document.getElementById('currentRoom').textContent = "Room Code: " + currentRoom;
+    alert("Room created. Share this code: " + currentRoom);
+    if (currentUser) setupRoomListeners();
   }
 
   function joinRoom() {
-    const roomCode = document.getElementById("roomCodeInput").value.trim();
-    if (roomCode) {
-      db.ref('rooms/' + roomCode).once('value', snapshot => {
-        if (snapshot.exists()) {
-          currentRoom = roomCode;
-          alert("Joined room: " + roomCode);
-          setupRoomListeners();
-        } else {
-          alert("Room code not found.");
-        }
-      });
+    const code = prompt("Enter room code:");
+    if (code) {
+      currentRoom = code.toUpperCase();
+      document.getElementById('currentRoom').textContent = "Room Code: " + currentRoom;
+      if (currentUser) setupRoomListeners();
     }
   }
 
   function setupRoomListeners() {
-    db.ref('messages/' + currentRoom).off();
-    db.ref('messages/' + currentRoom).on('child_added', snapshot => {
+    document.getElementById('messages').innerHTML = '';
+    db.ref('rooms/' + currentRoom + '/messages').off();
+
+    db.ref('rooms/' + currentRoom + '/messages').on('child_added', snapshot => {
       const m = snapshot.val();
       const div = document.createElement('div');
       div.className = 'message';
@@ -190,46 +170,20 @@
   }
 
   function sendMessage() {
-    if (!currentRoom) return alert("Join a room first!");
     const msg = document.getElementById('messageInput').value.trim();
-    if (!msg) return;
-
+    if (!msg || !currentRoom) return;
     const name = currentUser.displayName || "Anonymous";
     const timestamp = new Date().toISOString();
-    db.ref('messages/' + currentRoom).push().set({
+    db.ref('rooms/' + currentRoom + '/messages').push().set({
       text: msg,
-      userId: currentUser.uid,
       userName: name,
       timestamp: timestamp
     });
-
     document.getElementById('messageInput').value = '';
   }
 
   function updateTyping() {
-    // Optional: implement typing indicators per room
-  }
-
-  function viewAllRooms() {
-    db.ref('rooms').once('value', snapshot => {
-      const rooms = snapshot.val();
-      const roomListDiv = document.getElementById('roomList');
-      roomListDiv.innerHTML = "<h3>Existing Rooms:</h3>";
-
-      if (!rooms) {
-        roomListDiv.innerHTML += "<p>No rooms found.</p>";
-        return;
-      }
-
-      const list = document.createElement('ul');
-      for (const code in rooms) {
-        const item = document.createElement('li');
-        item.textContent = code;
-        list.appendChild(item);
-      }
-
-      roomListDiv.appendChild(list);
-    });
+    // Optional: Add typing indicators for private rooms if you like
   }
 
   function timeAgo(date) {
