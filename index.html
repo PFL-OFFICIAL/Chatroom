@@ -59,8 +59,14 @@
       margin-bottom: 10px;
       word-wrap: break-word;
     }
-    .user-name { font-weight: bold; }
-    .message-time { font-size: 0.8em; color: #777; display: block; }
+    .user-name {
+      font-weight: bold;
+    }
+    .message-time {
+      font-size: 0.8em;
+      color: #777;
+      display: block;
+    }
     #messageInput { width: calc(100% - 100px); padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
     .send-button {
       background-color: #28a745;
@@ -207,10 +213,18 @@
     const m = snapshot.val();
     const div = document.createElement('div');
     div.className = 'message';
-    div.innerHTML = `<span class="user-name">${m.userName}</span>: ${m.text}
+    div.innerHTML = `<span class="user-name" data-userid="${m.userId}">${m.userName}</span>: ${m.text}
       <span class="message-time">${timeAgo(new Date(m.timestamp))}</span>`;
     document.getElementById('messages').appendChild(div);
     document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+
+    if (currentUser && currentUser.email === "printforgelimited@gmail.com") {
+      div.querySelector('.user-name').style.cursor = 'pointer';
+      div.querySelector('.user-name').addEventListener('click', e => {
+        const uid = e.target.getAttribute('data-userid');
+        alert(`User ID: ${uid}`);
+      });
+    }
   });
 
   function updateTyping() {
