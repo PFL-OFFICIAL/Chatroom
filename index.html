@@ -114,6 +114,7 @@
   const db = firebase.database();
   let currentUser;
   let currentRoom = null;
+  let typingRef;
 
   function googleSignIn() {
     const provider = new firebase.auth.GoogleAuthProvider();
@@ -157,6 +158,7 @@
   function setupRoomListeners() {
     document.getElementById('messages').innerHTML = '';
     db.ref('rooms/' + currentRoom + '/messages').off();
+    db.ref('rooms/' + currentRoom + '/typing').off();
 
     db.ref('rooms/' + currentRoom + '/messages').on('child_added', snapshot => {
       const m = snapshot.val();
@@ -166,6 +168,28 @@
         <span class="message-time">${timeAgo(new Date(m.timestamp))}</span>`;
       document.getElementById('messages').appendChild(div);
       document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+    });
+
+    typingRef = db.ref('rooms/' + currentRoom + '/typing');
+
+    typingRef.on('value', snapshot => {
+      const typingUsers = snapshot.val();
+      let indicatorText = '';
+      if (typingUsers) {
+        const names = Object.values(typingUsers).filter(name => name !== currentUser.displayName);
+        if (names.length) indicatorText = names.join(', ') + ' typing...';
+      }
+      document.getElementById('typingIndicator').textContent = indicatorText;
+    });
+
+    const onlineRef = db.ref('rooms/' + currentRoom + '/online');
+    const userStatusRef = onlineRef.push();
+    userStatusRef.set(currentUser.displayName || 'Anonymous');
+    userStatusRef.onDisconnect().remove();
+
+    onlineRef.on('value', snap => {
+      const count = snap.numChildren();
+      document.getElementById('onlineCount').textContent = count + ' online';
     });
   }
 
@@ -180,10 +204,21 @@
       timestamp: timestamp
     });
     document.getElementById('messageInput').value = '';
+    stopTyping();
   }
 
   function updateTyping() {
-    // Optional: Add typing indicators for private rooms if you like
+    if (!currentRoom) return;
+    const name = currentUser.displayName || "Anonymous";
+    typingRef.child(currentUser.uid).set(name);
+    clearTimeout(window.typingTimeout);
+    window.typingTimeout = setTimeout(stopTyping, 3000);
+  }
+
+  function stopTyping() {
+    if (typingRef && currentUser) {
+      typingRef.child(currentUser.uid).remove();
+    }
   }
 
   function timeAgo(date) {
@@ -201,8 +236,16 @@
   picker.addEventListener('emoji-click', event => {
     const input = document.getElementById('messageInput');
     input.value += event.detail.unicode;
+    updateTyping();
   });
   document.getElementById('emojiPicker').appendChild(picker);
+
+  document.getElementById('messageInput').addEventListener('keypress', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
 </script>
 </body>
 </html>
