@@ -9,14 +9,10 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/emoji-picker-element@1"></script>
 
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Arial', sans-serif;
       background-color: #f5f5f5;
@@ -26,9 +22,7 @@
       align-items: center;
       height: 100vh;
       flex-direction: column;
-      margin: 0;
     }
-
     #chat-container {
       background-color: #fff;
       width: 90%;
@@ -40,13 +34,7 @@
       flex-direction: column;
       height: 90%;
     }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-      color: #007bff;
-    }
-
+    h1 { text-align: center; margin-bottom: 20px; color: #007bff; }
     button {
       background-color: #007bff;
       color: #fff;
@@ -56,49 +44,24 @@
       cursor: pointer;
       font-size: 16px;
       margin: 5px 0;
-      transition: background-color 0.3s ease;
     }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
     #messages {
       flex-grow: 1;
       overflow-y: auto;
       margin: 20px 0;
       padding-right: 10px;
     }
-
     .message {
       background-color: #f1f1f1;
       border-radius: 10px;
       padding: 10px;
       margin-bottom: 10px;
       word-wrap: break-word;
-      font-size: 14px;
     }
-
-    .user-name {
-      font-weight: bold;
-      color: #007bff;
-    }
-
-    .message-time {
-      font-size: 0.8em;
-      color: #999;
-      display: block;
-    }
-
-    #messageInput {
-      width: calc(100% - 100px);
-      padding: 10px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-      margin-bottom: 10px;
-      font-size: 14px;
-    }
-
+    .user-name { font-weight: bold; }
+    .message-time { font-size: 0.8em; color: #777; display: block; }
+    .like-button { cursor: pointer; color: #e0245e; margin-left: 10px; }
+    #messageInput { width: calc(100% - 100px); padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
     .send-button {
       background-color: #28a745;
       color: #fff;
@@ -107,231 +70,147 @@
       border-radius: 5px;
       cursor: pointer;
       font-size: 16px;
-      transition: background-color 0.3s ease;
     }
-
-    .send-button:hover {
-      background-color: #218838;
-    }
-
-    #adminControls {
-      display: none;
-      margin-top: 20px;
-      padding: 10px;
-      background-color: #f0f0f0;
-      border-radius: 8px;
-    }
-
-    #adminControls button {
-      background-color: #dc3545;
-    }
-
-    #adminControls button:hover {
-      background-color: #c82333;
-    }
-
-    #userList {
-      margin-top: 20px;
-      padding: 10px;
-      background-color: #e9ecef;
-      border-radius: 8px;
-    }
-
-    .user-item {
-      padding: 10px;
-      margin: 5px 0;
-      background-color: #f1f1f1;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    .user-item:hover {
-      background-color: #ddd;
-    }
-
-    #userDetails {
-      margin-top: 20px;
-      padding: 10px;
-      background-color: #f9f9f9;
-      border-radius: 8px;
-    }
-
-    body.dark-mode {
-      background-color: #2b2b2b;
-      color: white;
-    }
-
-    body.dark-mode #chat-container {
-      background-color: #333;
-      color: white;
-    }
-
-    body.dark-mode button {
-      background-color: #555;
-    }
-
-    body.dark-mode button:hover {
-      background-color: #666;
-    }
-
-    body.dark-mode .send-button {
-      background-color: #0066cc;
-    }
-
-    body.dark-mode .send-button:disabled {
-      background-color: #444;
-    }
-
-    body.dark-mode .message {
-      background-color: #444;
-      color: white;
-    }
-
-    body.dark-mode .user-item {
-      background-color: #444;
-      color: white;
-    }
+    #typingIndicator { font-size: 0.9em; color: #666; margin-top: 5px; }
+    #emojiPicker { margin-top: 10px; }
+    #onlineCount { margin-top: 10px; font-size: 0.9em; color: #555; }
   </style>
 </head>
 <body>
-  <div id="chat-container">
-    <h1>Chatroom</h1>
+<div id="chat-container">
+  <h1>Chatroom</h1>
 
-    <button onclick="googleSignIn()">Sign in with Google</button>
-    <button onclick="anonymousSignIn()">Sign in Anonymously</button>
+  <button onclick="googleSignIn()">Sign in with Google</button>
+  <button onclick="anonymousSignIn()">Sign in Anonymously</button>
 
-    <div id="messages"></div>
+  <div id="messages"></div>
 
-    <input type="text" id="messageInput" placeholder="Type a message" disabled>
-    <button onclick="sendMessage()" class="send-button" disabled>Send</button>
+  <input type="text" id="messageInput" placeholder="Type a message" disabled oninput="updateTyping()">
+  <button onclick="sendMessage()" class="send-button" disabled>Send</button>
 
-    <div id="adminControls">
-      <button onclick="clearChat()">Clear Chat</button>
-      <button onclick="deleteUser()">Delete User</button>
-      <div id="userList"></div>
-      <div id="userDetails"></div>
-    </div>
-  </div>
+  <div id="emojiPicker"></div>
+  <div id="typingIndicator"></div>
+  <div id="onlineCount"></div>
+</div>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCJPYAzpnNbAcRmywJYEHROZS9QFxXsARI",
-      authDomain: "chatroom-530ee.firebaseapp.com",
-      databaseURL: "https://chatroom-530ee-default-rtdb.firebaseio.com",
-      projectId: "chatroom-530ee",
-      storageBucket: "chatroom-530ee.appspot.com",
-      messagingSenderId: "438660677710",
-      appId: "1:438660677710:web:5b1057c2360a5093e4831f"
-    };
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCJPYAzpnNbAcRmywJYEHROZS9QFxXsARI",
+    authDomain: "chatroom-530ee.firebaseapp.com",
+    databaseURL: "https://chatroom-530ee-default-rtdb.firebaseio.com",
+    projectId: "chatroom-530ee",
+    storageBucket: "chatroom-530ee.appspot.com",
+    messagingSenderId: "438660677710",
+    appId: "1:438660677710:web:5b1057c2360a5093e4831f"
+  };
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.database();
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.database();
+  let currentUser;
 
-    function setUserRole(user) {
-      const isAdmin = user.email === 'printforgelimited@gmail.com';
-      db.ref('users/' + user.uid).set({
-        name: user.displayName,
-        email: user.email,
-        role: isAdmin ? 'admin' : 'user'
-      });
-    }
+  const usernameColors = {};
 
-    function googleSignIn() {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider)
-        .then(result => {
-          const user = result.user;
-          alert(`Welcome, ${user.displayName}!`);
-          setUserRole(user);
-          enableMessaging();
-          checkAdminRole(user);
-        })
-        .catch(error => alert("Google sign-in failed."));
-    }
+  function randomColor() {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) color += letters[Math.floor(Math.random() * 16)];
+    return color;
+  }
 
-    function anonymousSignIn() {
-      auth.signInAnonymously()
-        .then(() => {
-          alert("Signed in anonymously!");
-          enableMessaging();
-        })
-        .catch(() => alert("Anonymous sign-in failed."));
-    }
-
-    function enableMessaging() {
-      document.getElementById("messageInput").disabled = false;
-      document.querySelector(".send-button").disabled = false;
-    }
-
-    function checkAdminRole(user) {
-      db.ref('users/' + user.uid).once('value').then(snapshot => {
-        const data = snapshot.val();
-        if (data && data.role === 'admin') {
-          document.getElementById('adminControls').style.display = 'block';
-          loadUserList();
-        }
-      });
-    }
-
-    function loadUserList() {
-      db.ref('users').once('value').then(snapshot => {
-        const users = snapshot.val();
-        const list = document.getElementById('userList');
-        list.innerHTML = '';
-        for (const id in users) {
-          const u = users[id];
-          const div = document.createElement('div');
-          div.className = 'user-item';
-          div.textContent = u.name;
-          div.onclick = () => showUserDetails(id, u);
-          list.appendChild(div);
-        }
-      });
-    }
-
-    function showUserDetails(id, user) {
-      const details = document.getElementById('userDetails');
-      details.innerHTML = `  
-        <p><strong>Account ID:</strong> ${id}</p>
-        <p><strong>Email:</strong> ${user.email}</p>
-      `;
-    }
-
-    function sendMessage() {
-      const msg = document.getElementById('messageInput').value.trim();
-      if (!msg) return;
-      const user = auth.currentUser;
-      const name = user.displayName || "Anonymous";
-      const timestamp = new Date().toISOString();
-      db.ref('messages').push().set({
-        text: msg,
-        userId: user.uid,
-        userName: name,
-        timestamp: timestamp
-      });
-      document.getElementById('messageInput').value = '';
-    }
-
-    db.ref('messages').on('child_added', snapshot => {
-      const m = snapshot.val();
-      const div = document.createElement('div');
-      div.className = 'message';
-      div.innerHTML = `<span class="user-name">${m.userName}</span>: ${m.text}
-      <span class="message-time">${new Date(m.timestamp).toLocaleString()}</span>`;
-      document.getElementById('messages').appendChild(div);
+  function googleSignIn() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).then(result => {
+      currentUser = result.user;
+      enableMessaging();
+      db.ref('presence/' + currentUser.uid).set(true);
+      db.ref('presence/' + currentUser.uid).onDisconnect().remove();
     });
+  }
 
-    function clearChat() {
-      db.ref('messages').remove().then(() => alert("Chat cleared."));
-    }
+  function anonymousSignIn() {
+    auth.signInAnonymously().then(result => {
+      currentUser = result.user;
+      enableMessaging();
+      db.ref('presence/' + currentUser.uid).set(true);
+      db.ref('presence/' + currentUser.uid).onDisconnect().remove();
+    });
+  }
 
-    function deleteUser() {
-      const id = prompt("Enter User ID to delete:");
-      if (id) {
-        db.ref('users/' + id).remove().then(() => alert("User deleted."));
-      }
-    }
-  </script>
+  function enableMessaging() {
+    document.getElementById("messageInput").disabled = false;
+    document.querySelector(".send-button").disabled = false;
+  }
+
+  function sendMessage() {
+    const msg = document.getElementById('messageInput').value.trim();
+    if (!msg) return;
+    const name = currentUser.displayName || "Anonymous";
+    const timestamp = new Date().toISOString();
+    db.ref('messages').push().set({
+      text: msg,
+      userId: currentUser.uid,
+      userName: name,
+      timestamp: timestamp,
+      likes: 0
+    });
+    db.ref('typing/' + currentUser.uid).remove();
+    document.getElementById('messageInput').value = '';
+  }
+
+  db.ref('messages').on('child_added', snapshot => {
+    const m = snapshot.val();
+    const id = snapshot.key;
+    if (!usernameColors[m.userName]) usernameColors[m.userName] = randomColor();
+    const div = document.createElement('div');
+    div.className = 'message';
+    div.innerHTML = `<span class="user-name" style="color:${usernameColors[m.userName]}">${m.userName}</span>: ${m.text}
+      <span class="message-time">${timeAgo(new Date(m.timestamp))}</span>
+      <span class="like-button" onclick="likeMessage('${id}')">❤️ ${m.likes}</span>`;
+    document.getElementById('messages').appendChild(div);
+    document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+  });
+
+  function likeMessage(id) {
+    const likeRef = db.ref('messages/' + id + '/likes');
+    likeRef.transaction(likes => (likes || 0) + 1);
+  }
+
+  function updateTyping() {
+    if (!currentUser) return;
+    db.ref('typing/' + currentUser.uid).set(currentUser.displayName || 'Anonymous');
+    setTimeout(() => db.ref('typing/' + currentUser.uid).remove(), 3000);
+  }
+
+  db.ref('typing').on('value', snapshot => {
+    const data = snapshot.val();
+    const text = data ? Object.values(data).join(', ') + ' typing...' : '';
+    document.getElementById('typingIndicator').textContent = text;
+  });
+
+  db.ref('presence').on('value', snapshot => {
+    const count = snapshot.numChildren();
+    document.getElementById('onlineCount').textContent = `Online: ${count}`;
+  });
+
+  function timeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    if (seconds < 60) return 'just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return minutes + 'm ago';
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return hours + 'h ago';
+    const days = Math.floor(hours / 24);
+    return days + 'd ago';
+  }
+
+  // Emoji picker
+  const picker = document.createElement('emoji-picker');
+  picker.addEventListener('emoji-click', event => {
+    const input = document.getElementById('messageInput');
+    input.value += event.detail.unicode;
+  });
+  document.getElementById('emojiPicker').appendChild(picker);
+</script>
 </body>
 </html>
