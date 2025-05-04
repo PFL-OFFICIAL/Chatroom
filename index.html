@@ -60,7 +60,6 @@
     }
     .user-name { font-weight: bold; }
     .message-time { font-size: 0.8em; color: #777; display: block; }
-    .like-button { cursor: pointer; color: #e0245e; margin-left: 10px; }
     #messageInput { width: calc(100% - 100px); padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
     .send-button {
       background-color: #28a745;
@@ -109,15 +108,6 @@
   const db = firebase.database();
   let currentUser;
 
-  const usernameColors = {};
-
-  function randomColor() {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) color += letters[Math.floor(Math.random() * 16)];
-    return color;
-  }
-
   function googleSignIn() {
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider).then(result => {
@@ -151,8 +141,7 @@
       text: msg,
       userId: currentUser.uid,
       userName: name,
-      timestamp: timestamp,
-      likes: 0
+      timestamp: timestamp
     });
     db.ref('typing/' + currentUser.uid).remove();
     document.getElementById('messageInput').value = '';
@@ -160,21 +149,13 @@
 
   db.ref('messages').on('child_added', snapshot => {
     const m = snapshot.val();
-    const id = snapshot.key;
-    if (!usernameColors[m.userName]) usernameColors[m.userName] = randomColor();
     const div = document.createElement('div');
     div.className = 'message';
-    div.innerHTML = `<span class="user-name" style="color:${usernameColors[m.userName]}">${m.userName}</span>: ${m.text}
-      <span class="message-time">${timeAgo(new Date(m.timestamp))}</span>
-      <span class="like-button" onclick="likeMessage('${id}')">❤️ ${m.likes}</span>`;
+    div.innerHTML = `<span class="user-name">${m.userName}</span>: ${m.text}
+      <span class="message-time">${timeAgo(new Date(m.timestamp))}</span>`;
     document.getElementById('messages').appendChild(div);
     document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
   });
-
-  function likeMessage(id) {
-    const likeRef = db.ref('messages/' + id + '/likes');
-    likeRef.transaction(likes => (likes || 0) + 1);
-  }
 
   function updateTyping() {
     if (!currentUser) return;
